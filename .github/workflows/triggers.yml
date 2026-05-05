@@ -1,0 +1,22 @@
+name: Hola Mundo Workflow
+
+on:
+  push:
+    branches:
+      - aprendiendo-github-actions
+
+jobs:
+  run-python-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: 2. Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 3. Ejecutar script Hola Mundo
+        run: python hello-world.py
