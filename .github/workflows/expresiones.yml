@@ -1,0 +1,46 @@
+name: Manejo de operadores
+on: [push]
+
+jobs:
+  validar-todo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validar Estructura del Mensaje
+        if: ${{ !startsWith(github.event.head_commit.message, 'feature:') && !startsWith(github.event.head_commit.message, 'fix:') }}
+        run: |
+          echo "::error::Estructura de commit inválida."
+          exit 1
+
+      - name: Validar Versión Única
+        shell: python
+        run: |
+          import sys
+          import subprocess
+
+          with open('VERSION', 'r') as f:
+              new_v = f.read().strip()
+
+          existing_tags = subprocess.check_output(['git', 'tag']).decode('utf-8').split()
+          
+          print(f"Nueva versión propuesta: {new_v}")
+          
+          if new_v in existing_tags:
+              print(f"::error::La versión {new_v} ya existe en los tags del repo. Debe ser una versión totalmente diferente.")
+              sys.exit(1)
+
+          try:
+              old_v = subprocess.check_output(['git', 'show', 'HEAD~1:VERSION']).decode('utf-8').strip()
+              if new_v == old_v:
+                  print(f"::error::La versión no ha cambiado respecto al commit anterior.")
+                  sys.exit(1)
+          except:
+              pass
+
+      - name: Éxito
+        if: success()
+        run: echo "Validaciones aprobadas para ${{ github.actor }}"
